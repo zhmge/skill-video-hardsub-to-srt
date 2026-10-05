@@ -55,6 +55,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 - `<skill-dir>` 要解析成本 skill 的实际安装位置，不要假设当前工作目录就是 skill 目录。
 - `<venv-python>` 见 `references/environment-setup.md`；两个环境变量是**必需**的（见教训 4）。
 - 全片是 GPU 路线：1080p 60fps 约 **20 分钟/集**量级，耗时大头在逐帧 det。**先向用户报预计时长再开跑**，长跑放后台。
+- **降分辨率是合法的提速手段**：同一视频 480p（30fps）全片约 8 分钟，文本质量与 1080p 基本一致（实测平均相似度 98.3），只是会漏掉约 0.3s 的超短句；对字幕清晰的视频优先考虑。
 
 **4. 报结果**：`.srt` 路径、条数、耗时，以及**已知空洞**——超过 6s 没有字幕的区间通常是真实的过场（切场景、纯 UI、游戏画面），不是漏识别；需要时可以抽查确认。
 
