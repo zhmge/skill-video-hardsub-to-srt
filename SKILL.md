@@ -59,6 +59,18 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 
 **4. 报结果**：`.srt` 路径、条数、耗时，以及**已知空洞**——超过 6s 没有字幕的区间通常是真实的过场（切场景、纯 UI、游戏画面），不是漏识别；需要时可以抽查确认。
 
+## 已知边界：不判别 UI / 水印
+
+**本 skill 只做字幕提取，不做 UI 判别。** 它对 ROI 内的**一切文字**是无差别识别的——只要落在矩形区里、置信度过关，就会被当成字幕写进 `.srt`。游戏实况、模拟经营类视频里常见三类污染：
+
+- **常驻水印／台标**（如 `UID: 224115138`）——位置固定、一集重复十几次，但**置信度比真字幕还高**，`--conf` 挡不住；
+- **UI 标签**（如左下角门派名）——会**粘在字幕前缀**上，合成一条乱码；
+- **按钮／滑块文字**——与字幕**同带**，收窄 ROI 会把字幕一起裁掉。
+
+这是**矩形 ROI 工具的共性盲区**，不是本脚本的 bug。`--conf` 与收窄 `--roi-top/--roi-bot` 都解决不了；业界成熟的 `video-subtitle-extractor` 同样没解决。
+
+**要处理这类污染、或打算改动过滤逻辑之前，必须先读 `references/known-issues.md`**——那里记录了问题边界、一次失败修复的完整复盘（**重要的反面教训：拿"高频占据"当 UI 判据会误杀字幕**），以及调研后的可行优化方向。
+
 ## 六条实测教训（必须遵守）
 
 这六条是被真实运行反复打脸之后才总结出来的。想让脚本「更快 / 更简单」之前，先读这里。
@@ -109,6 +121,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 - `references/environment-setup.md` — **首次使用、或报错说缺依赖 / 模型下载 404 / torch 不可用**时读。venv 创建（`--system-site-packages`）、依赖清单与版本、两个必需环境变量、模型与缓存位置、GPU 路线与 CPU 路线的取舍、ffmpeg 来源。
 - `references/pipeline-design.md` — **想改动脚本、怀疑漏句或时间轴错乱、或需要向用户解释为什么这么慢 / 为什么不能提速**时读。四阶段流水线的完整原理、六条教训的推理与实测数据、归并规则细节、覆盖验证方法。
 - `references/roi-and-tuning.md` — **换新视频、字幕位置不在默认 ROI、或需要调投票 / 归并 / 置信度参数**时读。ROI 确认步骤、默认值来源、参数逐项含义与调参方向、症状→调参对照。
+- `references/known-issues.md` — **结果里混进 UI／水印文字且不能接受、或打算改动过滤逻辑**时读。问题边界（为什么 `--conf` 和矩形 ROI 都无效）、v2 失败修复的复盘与关键教训、`video-subtitle-extractor` 调研结论、待验证的优化方向（均未实施）。
 - `references/troubleshooting.md` — **运行失败或结果异常**时读。症状→原因→处置：模型 404、torch/sm_120 不可用、阶段 1 帧数异常、小样全空或全满、条数偏少、繁体混入、UI 文字混入、管道挂起。
 
 ## 与下游的衔接
