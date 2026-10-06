@@ -1,3 +1,9 @@
+# 环境目录一律不入库（环境由 conda 集中管理，见环境根目录的 AGENT.md）
+.venv*/
+venv*/
+envs/
+.conda/
+
 # 零依赖 Node 脚本，正常不需要 node_modules
 node_modules/
 

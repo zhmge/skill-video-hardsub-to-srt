@@ -25,16 +25,31 @@ yt-dlp
 - `rapidocr` / `onnxruntime` 只在需要跑 CPU 对照路线时才用到；主线（`paddleocr-tf`）不需要它们。
 - `yt-dlp` 用于从链接下载视频——脚本本身不下载。
 
-## venv：必须带 `--system-site-packages`
+## 环境：conda 环境 `skill-ocr`
 
-如果机器上已经有一个带 CUDA 版 torch 的 Python 环境，**用 `--system-site-packages` 建 venv 继承它**，不要在新 venv 里重装 torch（CUDA 版 torch 体积大、且版本必须与显卡架构匹配）：
+**不建 venv，也不用 `--system-site-packages`。** 建一个独立 conda 环境，自带一份 CUDA 版
+torch，与系统里的其他环境互不影响：
 
 ```bash
-<base-python> -m venv --system-site-packages .venv-hardsub
-.venv-hardsub/Scripts/python.exe -m pip install -r requirements.txt
+conda create -n skill-ocr python=3.13 -y
+conda run -n skill-ocr pip install -r requirements.txt
+conda run -n skill-ocr pip install torch torchvision \
+  --index-url https://download.pytorch.org/whl/cu128
 ```
 
-注意 venv 创建后**不要**随意升级/降级继承来的 torch——它的 CUDA 版本与新显卡架构（如 sm_120 / Blackwell）是否匹配，是全流程能否跑在 GPU 上的前提。torch 2.11+cu128 起才自带真实可用的 sm_120 kernel。
+下文用 `<python>` 指代该环境的解释器。装完用 `pip check` 复核依赖自洽。
+
+要点：
+
+- **必须显式装 torch 的 cu128 版**。`requirements.txt` 里没有 torch；装 `transformers`
+  时它可能拉来 CPU 版，必须用官方 cu128 索引覆盖，才能跑在 GPU 上。
+- **torch 版本必须与显卡架构匹配**。torch 2.11+cu128 起才自带真实可用的
+  sm_120 kernel（Blackwell / RTX 50 系）。升级/降级前先确认新版本仍支持你的架构。
+- 走 `transformers` 推理后端，模型跑在 PyTorch 上，**不需要 PaddlePaddle 运行时**。
+
+> 曾经的写法是 venv + `--system-site-packages` 继承外部 torch。已弃用：
+> venv 不可迁移（`Scripts/*.exe` 写死绝对路径），且把环境放进 skill 目录会污染仓库。
+> 现在统一用 conda 环境，路径不在 skill 文档里出现。
 
 ## 两个必需的环境变量
 
@@ -72,17 +87,18 @@ PADDLE_PDX_MODEL_SOURCE=huggingface
 ## 从零到跑通
 
 ```bash
-# 1) venv（继承已有 torch）
-<base-python> -m venv --system-site-packages .venv-hardsub
-.venv-hardsub/Scripts/python.exe -m pip install -r requirements.txt
+# 1) 环境
+conda create -n skill-ocr python=3.13 -y
+<python> -m pip install -r requirements.txt
+<python> -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 
 # 2) 小样验证 ROI
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
-.venv-hardsub/Scripts/python.exe scripts/hardsub_extract.py "<视频>" \
+<python> scripts/hardsub_extract.py "<视频>" \
   --out "<dir>/probe" --seconds 120 --keep-frames --source-url "<URL>"
 
 # 3) 核对 probe/_frames/*.png 后，跑全片
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
-.venv-hardsub/Scripts/python.exe scripts/hardsub_extract.py "<视频>" \
+<python> scripts/hardsub_extract.py "<视频>" \
   --out "<dir>" --source-url "<URL>"
 ```

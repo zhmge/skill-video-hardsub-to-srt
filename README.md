@@ -16,18 +16,17 @@
 ## 用法
 
 ```bash
-# 1) 环境（继承已有的 CUDA 版 torch）
-<base-python> -m venv --system-site-packages .venv-hardsub
-.venv-hardsub/Scripts/python.exe -m pip install -r requirements.txt
+# 环境：一个装好 requirements.txt 的 Python 环境（本机为 conda 环境 skill-ocr）
+<python> -m pip install -r requirements.txt
 
-# 2) 先跑小样确认字幕区（ROI）
+# 1) 先跑小样确认字幕区（ROI）
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
-.venv-hardsub/Scripts/python.exe scripts/hardsub_extract.py "<视频>" \
+<python> scripts/hardsub_extract.py "<视频>" \
   --out "<dir>/probe" --seconds 120 --keep-frames --source-url "<URL>"
 
-# 3) 核对 probe/_frames/*.png 后跑全片
+# 2) 核对 probe/_frames/*.png 后跑全片
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
-.venv-hardsub/Scripts/python.exe scripts/hardsub_extract.py "<视频>" \
+<python> scripts/hardsub_extract.py "<视频>" \
   --out "<dir>" --source-url "<URL>"
 ```
 
@@ -39,7 +38,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 |---|---|
 | `SKILL.md` | agent 入口：适用边界、工作流、六条实测教训、不可妥协项 |
 | `scripts/hardsub_extract.py` | 唯一实现，可独立当 CLI 用 |
-| `references/environment-setup.md` | venv / 依赖 / 模型源 / 路线取舍 |
+| `references/environment-setup.md` | 环境 / 依赖 / 模型源 / 路线取舍 |
 | `references/pipeline-design.md` | 四阶段原理 + 六条教训的实测依据 |
 | `references/roi-and-tuning.md` | ROI 确认 + 参数逐项说明 |
 | `references/troubleshooting.md` | 症状 → 原因 → 处置 |

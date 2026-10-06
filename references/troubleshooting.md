@@ -7,7 +7,7 @@
 | 症状 | 可能原因 | 处置 |
 |---|---|---|
 | 模型下载报 404 / `<Response [404]>` | 没设模型源（教训 4） | 确认 `PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True` 与 `PADDLE_PDX_MODEL_SOURCE=huggingface` 都在命令行前缀里；HF 偶发 502，重试即可 |
-| 报 torch/CUDA 不可用，或算子不支持 sm_120 | venv 没带 `--system-site-packages`，装了 CPU 版 torch | 重建 venv：`<base-python> -m venv --system-site-packages ...`；确认继承来的 torch 是 cu128+ 版本 |
+| 报 torch/CUDA 不可用，或算子不支持 sm_120 | 装的是 CPU 版 torch，或 torch 版本过老不含 `sm_120` kernel | 在 `skill-ocr` 环境里重装 CUDA 版：`<python> -m pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128`；确认版本 ≥ 2.11+cu128 |
 | 阶段 1 打印的帧数远小于预期（例如 716s 的视频只有几千帧） | `crop` 被移除了，按 ROI 高度切整帧字节流（教训 2） | 确认 `FrameReader` 的 ffmpeg 命令带 `-vf crop=W:H:0:y0` |
 | 小样 `_frames` 全空 | ROI 没对准字幕 | 见 `roi-and-tuning.md`，确认框确实罩住字幕 |
 | 小样 `_frames` 把背景也框进来了 | ROI 开太大 | 收窄 `--roi-top` / `--roi-bot` |

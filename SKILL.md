@@ -36,7 +36,7 @@ pipeline 一句话：`逐帧解码(crop 字幕区) → 逐帧文本检测 det �
 **2. 先跑 ROI 小样，再跑全片。** 这是唯一正确的顺序。
 
 ```bash
-<venv-python> "<skill-dir>/scripts/hardsub_extract.py" "<视频>" --out "<dir>/probe" \
+<python> "<skill-dir>/scripts/hardsub_extract.py" "<视频>" --out "<dir>/probe" \
   --seconds 120 --keep-frames --source-url "<URL>"
 ```
 
@@ -48,12 +48,13 @@ pipeline 一句话：`逐帧解码(crop 字幕区) → 逐帧文本检测 det �
 
 ```bash
 PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
-<venv-python> "<skill-dir>/scripts/hardsub_extract.py" "<视频>" --out "<dir>" \
+<python> "<skill-dir>/scripts/hardsub_extract.py" "<视频>" --out "<dir>" \
   --source-url "<URL>"
 ```
 
 - `<skill-dir>` 要解析成本 skill 的实际安装位置，不要假设当前工作目录就是 skill 目录。
-- `<venv-python>` 见 `references/environment-setup.md`；两个环境变量是**必需**的（见教训 4）。
+- `<python>` 是所需环境的解释器（本机为 conda 环境 `skill-ocr`；
+  环境清单在环境根目录的 `AGENT.md` 里）；两个环境变量是**必需**的（见教训 4）。
 - 全片是 GPU 路线：1080p 60fps 约 **20 分钟/集**量级，耗时大头在逐帧 det。**先向用户报预计时长再开跑**，长跑放后台。
 - **降分辨率是合法的提速手段**：同一视频 480p（30fps）全片约 8 分钟，文本质量与 1080p 基本一致（实测平均相似度 98.3），只是会漏掉约 0.3s 的超短句；对字幕清晰的视频优先考虑。
 
@@ -98,7 +99,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 - **跑全片前必须先跑 ROI 小样**（教训 6）。
 - **`.srt` 第 1 行必须是来源链接，第 2 行必须留空。** 这是与 `bilibili-subtitle-fetch`、`srt-course-outline` 三者共享的契约：下游读第 1 行拼精确空降链接。不要删掉、不要把链接挪进注释、不要丢掉其后那一行空行（按空行分块的解析器会把链接粘到首个 cue 上并静默丢弃）。
 - **`--out` 必填，不替用户猜路径**；报告产物时要给出真实位置。
-- **模型缓存与 venv 不是交付物**，不要把它们的路径当结果报给用户（缓存位置见 `references/environment-setup.md`）。
+- **模型缓存与环境都不是交付物**，不要把它们的路径当结果报给用户（缓存位置见 `references/environment-setup.md`）。
 
 ## 输出
 
@@ -118,7 +119,7 @@ PADDLE_PDX_DISABLE_MODEL_SOURCE_CHECK=True PADDLE_PDX_MODEL_SOURCE=huggingface \
 
 ## References
 
-- `references/environment-setup.md` — **首次使用、或报错说缺依赖 / 模型下载 404 / torch 不可用**时读。venv 创建（`--system-site-packages`）、依赖清单与版本、两个必需环境变量、模型与缓存位置、GPU 路线与 CPU 路线的取舍、ffmpeg 来源。
+- `references/environment-setup.md` — **首次使用、或报错说缺依赖 / 模型下载 404 / torch 不可用**时读。环境创建（conda `skill-ocr`）、依赖清单与版本、两个必需环境变量、模型与缓存位置、GPU 路线与 CPU 路线的取舍、ffmpeg 来源。
 - `references/pipeline-design.md` — **想改动脚本、怀疑漏句或时间轴错乱、或需要向用户解释为什么这么慢 / 为什么不能提速**时读。四阶段流水线的完整原理、六条教训的推理与实测数据、归并规则细节、覆盖验证方法。
 - `references/roi-and-tuning.md` — **换新视频、字幕位置不在默认 ROI、或需要调投票 / 归并 / 置信度参数**时读。ROI 确认步骤、默认值来源、参数逐项含义与调参方向、症状→调参对照。
 - `references/known-issues.md` — **结果里混进 UI／水印文字且不能接受、或打算改动过滤逻辑**时读。问题边界（为什么 `--conf` 和矩形 ROI 都无效）、v2 失败修复的复盘与关键教训、`video-subtitle-extractor` 调研结论、待验证的优化方向（均未实施）。

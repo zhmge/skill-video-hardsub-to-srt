@@ -7,7 +7,7 @@
 字幕区（Region of Interest）用两个比例参数描述，`--roi-top` 是上边界、`--roi-bot` 是下边界，取值 0~1（相对画面高度）：
 
 ```bash
-<venv-python> scripts/hardsub_extract.py "<视频>" --out "<dir>/probe" \
+<python> scripts/hardsub_extract.py "<视频>" --out "<dir>/probe" \
   --seconds 120 --keep-frames --source-url "<URL>"
 ```
 
